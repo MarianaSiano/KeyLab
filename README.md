@@ -134,3 +134,83 @@ npm run start
 *O sistema gerará automaticamente o arquivo persistente do banco `database.sqlite` na raiz do seu projeto mantendo todas as alterações salvas em segurança.*
 
 ---
+
+## 🌟 Funcionalidades Integradas do KeyLab
+
+- **Visão Geral das Duas Chaves:** Painel visual com cartões indicando se a **Chave Principal** e a **Chave Reserva** estão livres ou em posse, com cor verde/laranja.
+
+- **Formulário Dinâmico de Alunos (CRUD):** Adicione novos alunos com classificação de nível (Graduação/Iniciação Científica ou Pós-Graduação/Mestrado/Doutorado). É possível Editar dados existentes e Remover cadastros (desde que o aluno não esteja com uma chave pendente de devolução).
+
+- **Adição Dinâmica de Orientador:** É possível integrar um professor orientador novo no banco de dados SQLite sem sair do fluxo utilizando o formulário inline.
+
+- **Garantia de Chave Única:** O backend SQL impede com transação robusta que um mesmo aluno realize empréstimo de chaves adicionais simultaneamente sem realizar a devolução anterior.
+
+- **Histórico Completo Auditável:** Visualização simples de transações antigas e ativas com relatórios indexados e campo de pesquisa instantânea por nome ou matrícula.
+
+---
+
+## 🏗️ Como Criar uma Aplicação Deste Tipo (Do Zero via Linha de Comando)
+
+Para criar de forma extremamente rápida uma infraestrutura idêntica de **React (Frontend)** unificado a um servidor **Python Flask (Backend)** com **SQLite** integrado em porta única (3000), execute a seguinte sequência de comandos no seu terminal:
+
+### Passo 1: Inicializar o Frontend com Vite e React (TypeScript)
+
+Abra o seu terminal e rode os comandos abaixo para configurar o esqueleto do cliente. Você pode utilizar a sua ferramenta de preferência (**npm** ou **npx**):
+
+```bash
+# 1. Cria a pasta do diretório raiz e realize o acesso
+mkdir meu-projeto-keylab && cd meu-projeto-keylab
+
+# 2. Inicializa o React 19 + TypeScript na raiz do diretório criado
+# Usando npx:
+npx create-vite@latest . --template react-ts
+
+# OU usando npm alternativamente:
+# npm create vite@latest . -- --template react-ts
+
+# 3. Instala as dependências visuais, bibliotecas de ícones, Motion e utilitários
+npm install lucide-react motion @tailwindcss/vite tailwindcss
+npm install --save-dev typescript @types/node
+```
+
+### Passo 2: Inicializar o Ambiente Virtual Python (Flask & SQLite)
+
+Crie o ambiente virtual e instale o micro-framework Flask de forma isolada:
+
+```bash
+# 1. Cria o ambiente virtual Python 3 na raiz (no Windows)
+python -m venv venv
+
+# 2. Ativa o ambiente virtual virtualenv
+# No Linux/macOS:
+source venv/bin/activate
+# No Windows (PowerShell):
+# .\venv\Scripts\Activate.ps1
+
+# 3. Instala o Flask e dependências do backend
+pip install flask
+```
+
+### Passo 3: Configurar os Scripts de Execução Unificados
+
+Edite o arquivo `package.json` criado na raiz para adicionar os comandos que compilam os dados estáticos do React e disparam o servidor Flask em sequência:
+
+Configure sua seção `"scripts"` como a seguir:
+
+- **`"dev"`**: `"vite build && python3 server.py"` (Compila o frontend unificado e inicializa a API Flask).
+
+- **`"start"`**: `"python3 server.py"` (Inicia o servidor de produção servindo os assets estáticos)
+
+### Passo 4: Estrutura do Backend em Python (`server.py`)
+
+Crie o arquivo básico `server.py` que lê o diretório `dist` gerado pelo Vite e responde na mesma porta:
+
+1. Monte rotas prefixadas por `/api/...` para retornar dados JSON vindos do SQLite.
+
+2. Crie uma rota coringa (`@app.route("/", defaults={"path": ""})`) que serve o arquivo `index.html` da pasta estática do Vite, viabilizando o roteamento perfeito no cliente.
+
+3. Rode na porta de entrada unificada **3000** (`app.run(host="0.0.0.0", port=3000)`).
+
+Desta forma, sua aplicação React consumirá chamadas de API nativas via `fetch("/api/...")` sem precisar de configurações complexas de CORS ou múltiplas portas em ambiente local ou de nuvem.
+
+Ao seguir esta mesma estrutura pragmática baseada em **unificação de portas**, o seu projeto se beneficiará de uma latência reduzida nas requisições, segurança nas transações do banco de dados relacional e visual moderno e instantâneo no cliente.
