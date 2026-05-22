@@ -21,3 +21,45 @@ Esta aplicação conta com uma arquitetura **Full-stack moderna utilizando Pytho
   - **Motion:** Micro-animações nativas para transições orgânicas e acolhedoras em modais e atualizações.
 
 ---
+
+## 🗄️ Esquema do Banco de Dados SQL
+
+O banco relacional conta com quatro tabelas interligadas que mantêm a integridade absoluta dos dados:
+
+1. **`professors` (Docentes Orientadores):**
+  - Registra os professores membros do PPGCC do laboratório em específico.
+  - Colunas: `id` (PK), `name` (Texto Único), `email` (Texto).
+  - Pré-populado com os professores eminentes.
+
+2. **`students` (Alunos de Graduação e Pós):**
+  - Contém discentes ativos elegíveis a retirar chaves.
+  - Colunas: 
+    - `id` (PK);
+    - `name` (Texto);
+    - `email` (Texto);
+    - `registration_number` (Texto Único);
+    - `Type` (Texto: 'Graduação' ou 'Pós-Graduação');
+    - `Professor_id` (FK refenciado `professors`).
+
+3. **`keys` (As Duas Chaves):**
+  - Gerencia a disponibilidade física das duas chaves do laboratório NetLab.
+  -Colunas: 
+    - `id` (PK);
+    - `name` (Texto);
+    - `status` (Texto: 'Disponível' ou 'emprestada');
+    - `current_student_id` (FK para `students`)
+    - `last_borrowed_at` (Data/Hora de retirada).
+
+4. **`key_logs` (Histórico Inviolável de Movimentações):**
+  - Rastreabilidade de empréstimos ("Quem pegou, quando pegou e quando devolveu") para auditoria transparente do laboratório.
+  - Colunas: 
+    - `id` (PK);
+    - `key_id` (FK para `keys`); 
+    - `student_id` (FK para `students` com `ON DELETE SET NULL` para manter logs históricos mesmo que cadastros sejam modificados);
+    - `student_name_snapshot` (Garantia de histórico com o nome do aluno blindado a alterações futuras);
+    - `taken_at` (Timestamp de retirada);
+    - `returned_at` (Timestamp de devolução - nulo enquanto em posse).
+
+---
+
+## 🚀 Como Rodar o Projeto Localmente (Passo a Passo)
