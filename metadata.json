@@ -1,0 +1,8 @@
+{
+    "name": "KeyLab",
+    "description": "Sistema de gerenciamento de chaves do NetLab (PPGCC/UFJF) com cadastro de alunos, orientadores e histórico de empréstimos.",
+    "requestFramePermissions": [],
+    "majorCapabilities": [
+        "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+    ]
+}
