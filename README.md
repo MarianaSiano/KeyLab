@@ -6,3 +6,18 @@ Esta aplicação conta com uma arquitetura **Full-stack moderna utilizando Pytho
 
 ---
 
+## 🛠️ Arquitetura e Tecnologias
+
+- **Backend (Python & APIs REST)**
+  - **Python 3:** Linguagem robusta e ágil no backend.
+  - **Flask:** Framework leve para provisionamento de endpoints REST robustos de alta performance.
+  - **SQLite3 Relacional:** Banco de dados relacional baseado em arquivo (`database.sqlite`) com suporte nativo a ACID, restrições estruturadas via chaves estrangeiras (`PRAGMA foreign_keys = ON;`), e índices para altíssimo desempenho em consultas.
+  - **Auto-Instador Inteligente:** O backend detecta se o `Flack` está instalado no sistema operacional e, caso contrário, instala-o via `pip` automaticamente ao iniciar.
+
+- **Frontend (Cliente React)**
+  - **React 19 & Vite:** Visualização instantânea e reatividade no gerenciamento do estado no navegador.
+  - **Tailwind CSS:** Estilização baseada em utilitários de alta legibilidade, com cores acadêmicos sóbrias, excelente contraste de tela e design responsivo adaptável a tablets, celulares e desktops.
+  - **Lucide React:** Biblioteca rica de ícones vetoriais refinados e modernos.
+  - **Motion:** Micro-animações nativas para transições orgânicas e acolhedoras em modais e atualizações.
+
+---
