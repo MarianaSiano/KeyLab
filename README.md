@@ -63,3 +63,74 @@ O banco relacional conta com quatro tabelas interligadas que mantêm a integrida
 ---
 
 ## 🚀 Como Rodar o Projeto Localmente (Passo a Passo)
+
+Siga atentamente as instruções detalhadas abaixo para colocar o KeyLab em pleno funcionamento no seu ambiente de desenvolvimento ou produção.
+
+### 📋 Pré-requisitos
+
+Certifique-se de possuir instalado em sua máquina:
+
+1. **Node.js:** (Versão 22 ou superior recomendada, contendo o utilitário `npm`).
+2. **Python 3:** (Com instalador `pip` ativo nas variáveis de ambientes globais).
+
+---
+
+### Passo 1: Preparar o Diretório do Projeto
+
+Entre na pasta onde você extraiu ou clonou os arquivos da aplicação:
+
+```bash
+cd /caminho/do/projeto/keylab
+```
+
+---
+
+### Passo 2: Instalar as Dependências do Frontend React
+Instale as bibliotecas necessárias para a compilação e execução do React:
+
+```bash
+npm install
+```
+
+*Este comando gera a pasta `node_modules` com Vite, Tailwind, Motion e empacotadores essenciais.*
+
+---
+
+### Passo 3: Executar a Aplicação em Modo de Desenvolvimento (Vite + Python)
+
+Para criar as primeiras frentes estáticas e ligar o servidor Python localmente de forma simples e direta, execute:
+
+```bash
+npm run dev
+```
+
+*O console do NPM executará o `vite build` para compilar o HTML/CSS/JS reativo e, em seguida, ligará o `server.py` em Flask na porta **3000**.*
+
+Ao iniciar, você receberá o feedback do terminal:
+
+```text
+Flask não encontrado. Instalando automaticamente... (Se aplicável)
+Banco de dados SQLite inicializado perfeitamente com integridade referencial.
+ * Serving Flask app 'server'
+ * Debug mode: off
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:3000
+```
+
+Abra o seu navegador e explore:
+👉 **[http://localhost:3000](http://localhost:3000)**
+
+---
+
+### Passo 4: Rodar o Servidor Diretamente em Produção (Sem remontar Vite)
+
+Caso o seu frontend já esteja compilado dentro da pasta `/dist`, você pode pular a etapa do Vite e iniciar puramente o backend Python Flask (que servirá nativamente as páginas compiladas):
+
+```bash
+# Executa apenas o backend servindo o frontend estático já pronto
+npm run start
+```
+
+*O sistema gerará automaticamente o arquivo persistente do banco `database.sqlite` na raiz do seu projeto mantendo todas as alterações salvas em segurança.*
+
+---
