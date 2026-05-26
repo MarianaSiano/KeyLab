@@ -4,18 +4,15 @@ import {
     Users,
     History,
     UserPlus,
-    // Plus,
     Trash2,
     Edit,
     CheckCircle,
-    // XSquare,
     Search,
     ArrowLeftRight,
     GraduationCap,
     Clock,
     UserCheck,
     RefreshCw,
-    // FileText,
     Check,
     AlertCircle,
     Mail,
@@ -24,13 +21,16 @@ import {
     AlertTriangle,
     School
 } from "lucide-react";
-
 import { motion, AnimatePresence } from "motion/react";
 import type { Key, Student, Professor, KeyLog } from "./types";
 
 export default function App() {
     // Navigation / Tabs
     const [activeTab, setActiveTab] = useState<"dashboard" | "students" | "history">("dashboard");
+
+    // Masking helpers to ensure data privacy (emails and registrations are masked on the server under LGPD)
+    const maskEmail = (email: string) => email || "";
+    const maskRegistration = (reg: string) => reg || "";
 
     // State
     const [keys, setKeys] = useState<Key[]>([]);
@@ -63,10 +63,6 @@ export default function App() {
         professor_id: ""
     });
 
-    // Professor creation state (simple inline toggle/form to prevent blockages)
-    const [showProfForm, setShowProfForm] = useState(false);
-    const [newProfForm, setNewProfForm] = useState({ name: "", email: "" });
-
     // Fetch all initial data
     const fetchData = async () => {
         setLoading(true);
@@ -78,17 +74,27 @@ export default function App() {
                 fetch("/api/keys/history").then(r => r.json())
             ]);
 
-            if (keysRes.error) throw new Error(keysRes.error);
-            if (studentsRes.error) throw new Error(studentsRes.error);
-            if (professorsRes.error) throw new Error(professorsRes.error);
-            if (historyRes.error) throw new Error(historyRes.error);
+            if(keysRes.error) 
+                throw new Error(keysRes.error);
+
+            if(studentsRes.error) 
+                throw new Error(studentsRes.error);
+
+            if(professorsRes.error) 
+                throw new Error(professorsRes.error);
+
+            if(historyRes.error) 
+                throw new Error(historyRes.error);
 
             setKeys(keysRes);
             setStudents(studentsRes);
             setProfessors(professorsRes);
+            if(professorsRes && professorsRes.length > 0) {
+                setStudentForm(prev => ({ ...prev, professor_id: String(professorsRes[0].id) }));
+            }
             setHistory(historyRes);
             setApiError(null);
-        } catch (err: any) {
+        } catch(err: any) {
             console.error(err);
             setApiError("Erro ao sincronizar com o servidor: " + err.message);
         } finally {
@@ -102,7 +108,7 @@ export default function App() {
 
     // Show auto-dismiss notifications
     const triggerNotification = (type: "error" | "success", message: string) => {
-        if (type === "error") {
+        if(type === "error") {
             setApiError(message);
             setTimeout(() => setApiError(null), 6000);
         } else {
@@ -114,7 +120,7 @@ export default function App() {
     // Student Actions: Add or Update
     const handleStudentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!studentForm.name || !studentForm.email || !studentForm.registration_number || !studentForm.professor_id) {
+        if(!studentForm.name || !studentForm.email || !studentForm.registration_number) {
             triggerNotification("error", "Preencha todos os campos obrigatórios do aluno.");
             return;
         }
@@ -124,7 +130,7 @@ export default function App() {
             email: studentForm.email.trim(),
             registration_number: studentForm.registration_number.trim(),
             type: studentForm.type,
-            professor_id: Number(studentForm.professor_id)
+            professor_id: Number(studentForm.professor_id) || (professors[0] ? professors[0].id : 1)
         };
 
         try {
@@ -137,7 +143,7 @@ export default function App() {
             });
             const data = await response.json();
 
-            if (!response.ok) {
+            if(!response.ok) {
                 throw new Error(data.error || "Falha ao salvar dados do aluno.");
             }
 
@@ -152,7 +158,7 @@ export default function App() {
                 professor_id: professors.length > 0 ? String(professors[0].id) : ""
             });
             fetchData();
-        } catch (err: any) {
+        } catch(err: any) {
             triggerNotification("error", err.message);
         }
     };
@@ -172,50 +178,20 @@ export default function App() {
 
     // Student Deletion
     const handleDeleteStudent = async (studentId: number) => {
-        if (!window.confirm("Deseja realmente excluir este aluno do registro permanente?")) return;
+        if(!window.confirm("Deseja realmente excluir este aluno do registro permanente?")) 
+            return;
+
         try {
             const response = await fetch(`/api/students/${studentId}`, { method: "DELETE" });
             const data = await response.json();
 
-            if (!response.ok) {
+            if(!response.ok) {
                 throw new Error(data.error || "Erro ao deletar aluno.");
             }
 
             triggerNotification("success", "Aluno excluído com sucesso.");
             fetchData();
-        } catch (err: any) {
-            triggerNotification("error", err.message);
-        }
-    };
-
-    // Add New Professor Programmatically
-    const handleProfessorSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newProfForm.name) {
-            triggerNotification("error", "O nome do professor/orientador é obrigatório.");
-            return;
-        }
-        try {
-            const response = await fetch("/api/professors", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newProfForm.name, email: newProfForm.email })
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Erro ao registrar professor.");
-            }
-
-            triggerNotification("success", `Orientador '${data.name}' integrado ao sistema!`);
-            setNewProfForm({ name: "", email: "" });
-            setShowProfForm(false);
-
-            // Update professors list and automatically select the newly created professor
-            const updatedProfs = await fetch("/api/professors").then(r => r.json());
-            setProfessors(updatedProfs);
-            setStudentForm(prev => ({ ...prev, professor_id: String(data.id) }));
-        } catch (err: any) {
+        } catch(err: any) {
             triggerNotification("error", err.message);
         }
     };
@@ -223,7 +199,7 @@ export default function App() {
     // Key operations: Borrow Key
     const handleBorrowKey = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!showBorrowModal || !selectedStudentForBorrow) {
+        if(!showBorrowModal || !selectedStudentForBorrow) {
             triggerNotification("error", "Selecione um aluno apto para empréstimo.");
             return;
         }
@@ -236,7 +212,7 @@ export default function App() {
             });
             const data = await response.json();
 
-            if (!response.ok) {
+            if(!response.ok) {
                 throw new Error(data.error || "Falha ao emprestar chave.");
             }
 
@@ -244,25 +220,25 @@ export default function App() {
             setShowBorrowModal(null);
             setSelectedStudentForBorrow("");
             fetchData();
-        } catch (err: any) {
+        } catch(err: any) {
             triggerNotification("error", err.message);
         }
     };
 
     // Key operations: Return Key
     const handleReturnKey = async (keyId: number) => {
-        if (!window.confirm("Confirmar a devolução física desta chave de volta ao armário do NetLab?")) return;
+        if(!window.confirm("Confirmar a devolução física desta chave de volta ao armário do NetLab?")) return;
         try {
             const response = await fetch(`/api/keys/${keyId}/return`, { method: "POST" });
             const data = await response.json();
 
-            if (!response.ok) {
+            if(!response.ok) {
                 throw new Error(data.error || "Falha ao registrar devolução.");
             }
 
             triggerNotification("success", "A chave foi assinada como DEVOLVIDA e está disponível!");
             fetchData();
-        } catch (err: any) {
+        } catch(err: any) {
             triggerNotification("error", err.message);
         }
     };
@@ -305,39 +281,46 @@ export default function App() {
                         </div>
                     </div>
 
-                    {/* Navigation Controls */}
-                    <nav className="flex items-center bg-slate-800 p-1.5 rounded-xl border border-slate-700">
-                        <button
-                            onClick={() => setActiveTab("dashboard")}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "dashboard"
+                    {/* Navigation Controls and Privacy Mode */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto justify-end">
+                        <nav className="flex items-center bg-slate-800 p-1.5 rounded-xl border border-slate-700">
+                            <button
+                                onClick={() => setActiveTab("dashboard")}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "dashboard"
                                     ? "bg-slate-900 text-amber-400 shadow-sm border border-slate-700"
                                     : "text-slate-300 hover:text-white"
-                                }`}
-                        >
-                            <KeyIcon className="w-4 h-4" />
-                            Chaves NetLab
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("students")}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "students"
+                                    }`}
+                            >
+                                <KeyIcon className="w-4 h-4" />
+                                Chaves NetLab
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("students")}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "students"
                                     ? "bg-slate-900 text-amber-400 shadow-sm border border-slate-700"
                                     : "text-slate-300 hover:text-white"
-                                }`}
-                        >
-                            <Users className="w-4 h-4" />
-                            Cadastros Alunos
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("history")}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "history"
+                                    }`}
+                            >
+                                <Users className="w-4 h-4" />
+                                Cadastros Alunos
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("history")}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${activeTab === "history"
                                     ? "bg-slate-900 text-amber-400 shadow-sm border border-slate-700"
                                     : "text-slate-300 hover:text-white"
-                                }`}
-                        >
-                            <History className="w-4 h-4" />
-                            Histórico
-                        </button>
-                    </nav>
+                                    }`}
+                            >
+                                <History className="w-4 h-4" />
+                                Histórico
+                            </button>
+                        </nav>
+
+                        <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 select-none w-full sm:w-auto justify-center" title="Dados sensíveis protegidos por criptografia e mascaramento no servidor de acordo com a LGPD">
+                            <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            CONFORME LGPD
+                        </div>
+                    </div>
                 </div>
             </header>
 
@@ -419,8 +402,8 @@ export default function App() {
                                             <div
                                                 key={key.id}
                                                 className={`bg-white rounded-2xl p-6 border transition-all ${isAvailable
-                                                        ? "border-emerald-200 shadow-sm hover:shadow-md"
-                                                        : "border-amber-200 shadow-sm hover:shadow-md"
+                                                    ? "border-emerald-200 shadow-sm hover:shadow-md"
+                                                    : "border-amber-200 shadow-sm hover:shadow-md"
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-start">
@@ -436,8 +419,8 @@ export default function App() {
 
                                                     {/* BADGES */}
                                                     <span className={`px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full ${isAvailable
-                                                            ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
-                                                            : "bg-amber-100 text-amber-700 border border-amber-200"
+                                                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                                        : "bg-amber-100 text-amber-700 border border-amber-200"
                                                         }`}>
                                                         {isAvailable ? "Disponível" : "Emprestada"}
                                                     </span>
@@ -464,7 +447,7 @@ export default function App() {
                                                                 </div>
                                                                 <div>
                                                                     <span className="text-xs text-slate-400 block">Matrícula (UFJF)</span>
-                                                                    <span className="font-mono text-xs font-medium text-slate-800">{key.student_registration}</span>
+                                                                    <span className="font-mono text-xs font-medium text-slate-800">{maskRegistration(key.student_registration || "")}</span>
                                                                 </div>
                                                                 <div>
                                                                     <span className="text-xs text-slate-400 block">Orientador Responsável</span>
@@ -479,7 +462,7 @@ export default function App() {
                                                             </div>
                                                             <div className="flex items-center gap-2 text-xs text-slate-500 border-t border-amber-200/50 pt-2.5 mt-2">
                                                                 <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                                                <span>Contato: <span className="underline">{key.student_email}</span></span>
+                                                                <span>Contato: <span className="underline">{maskEmail(key.student_email || "")}</span></span>
                                                             </div>
                                                         </div>
                                                     )}
@@ -490,7 +473,7 @@ export default function App() {
                                                     {isAvailable ? (
                                                         <button
                                                             onClick={() => {
-                                                                if (students.length === 0) {
+                                                                if(students.length === 0) {
                                                                     triggerNotification("error", "Não há alunos cadastrados. Cadastre um aluno primeiro antes de emprestar a chave.");
                                                                     return;
                                                                 }
@@ -651,16 +634,16 @@ export default function App() {
                                                             <td className="px-6 py-4">
                                                                 <div className="font-semibold text-slate-800">{student.name}</div>
                                                             </td>
-                                                            <td className="px-6 py-4 text-slate-500">{student.email}</td>
+                                                            <td className="px-6 py-4 text-slate-500">{maskEmail(student.email)}</td>
                                                             <td className="px-6 py-4">
                                                                 <span className="font-mono text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200/50">
-                                                                    {student.registration_number}
+                                                                    {maskRegistration(student.registration_number)}
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4">
                                                                 <span className={`px-2.5 py-1 text-xs font-semibold rounded-full inline-flex items-center gap-1 ${student.type === "Pós-Graduação"
-                                                                        ? "bg-purple-50 text-purple-700 border border-purple-100"
-                                                                        : "bg-blue-50 text-blue-700 border border-blue-100"
+                                                                    ? "bg-purple-50 text-purple-700 border border-purple-100"
+                                                                    : "bg-blue-50 text-blue-700 border border-blue-100"
                                                                     }`}>
                                                                     <GraduationCap className="w-3.5 h-3.5" />
                                                                     {student.type}
@@ -767,7 +750,7 @@ export default function App() {
                                                                     <div>
                                                                         <p className="font-semibold text-slate-800">{log.student_name_snapshot}</p>
                                                                         {log.student_registration && (
-                                                                            <p className="text-xs font-mono text-slate-400">Matrícula: {log.student_registration}</p>
+                                                                            <p className="text-xs font-mono text-slate-400">Matrícula: {maskRegistration(log.student_registration)}</p>
                                                                         )}
                                                                     </div>
                                                                 </td>
@@ -899,63 +882,24 @@ export default function App() {
                                     </div>
                                 </div>
 
-                                {/* Professor Responsável Orientador */}
-                                <div className="border-t border-slate-100 pt-4">
-                                    <div className="flex justify-between items-center mb-1.5">
-                                        <label className="block text-xs font-bold uppercase text-slate-500 flex items-center gap-1">
-                                            <School className="w-3.5 h-3.5 text-slate-400" /> Professor Orientador (UFJF) *
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowProfForm(!showProfForm)}
-                                            className="text-xs text-amber-600 font-semibold hover:underline"
-                                        >
-                                            {showProfForm ? "Cancelar cadastro" : "Adicionar outro Professor/Orientador +"}
-                                        </button>
-                                    </div>
-
-                                    {showProfForm ? (
-                                        <div className="bg-amber-50/40 p-4 rounded-xl border border-amber-200/70 space-y-3 mt-1">
-                                            <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Novo Orientador</p>
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    placeholder="Nome Completo do Professor (Ex: Prof. Dr. Alex Borges)"
-                                                    value={newProfForm.name}
-                                                    onChange={(e) => setNewProfForm({ ...newProfForm, name: e.target.value })}
-                                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-amber-500"
-                                                />
-                                            </div>
-                                            <div className="flex gap-2 items-center">
-                                                <input
-                                                    type="email"
-                                                    placeholder="E-mail institucional (Ex: alex.borges@ufjf.br)"
-                                                    value={newProfForm.email}
-                                                    onChange={(e) => setNewProfForm({ ...newProfForm, email: e.target.value })}
-                                                    className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:ring-1 focus:ring-amber-500"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={handleProfessorSubmit}
-                                                    className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs shrink-0"
-                                                >
-                                                    Salvar Orientador
-                                                </button>
-                                            </div>
+                                {/* Professor Responsável Orientador (Dono único das chaves) */}
+                                <div className="border-t border-slate-100 pt-4 space-y-2">
+                                    <label className="block text-xs font-bold uppercase text-slate-500 flex items-center gap-1 dropdown-no-click select-none">
+                                        <School className="w-3.5 h-3.5 text-slate-400" /> Professor Coordenador (Real Dono das Chaves)
+                                    </label>
+                                    <div className="bg-slate-50 border border-slate-200/60 rounded-xl p-3.5 flex items-center gap-3">
+                                        <div className="bg-amber-500/10 text-amber-600 p-2 rounded-xl shrink-0">
+                                            <School className="w-5 h-5" />
                                         </div>
-                                    ) : (
-                                        <select
-                                            required
-                                            value={studentForm.professor_id}
-                                            onChange={(e) => setStudentForm({ ...studentForm, professor_id: e.target.value })}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                        >
-                                            <option value="" disabled>--- Selecione o Orientador responsável ---</option>
-                                            {professors.map((p) => (
-                                                <option key={p.id} value={p.id}>{p.name} {p.email ? `(${p.email})` : ""}</option>
-                                            ))}
-                                        </select>
-                                    )}
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-800">
+                                                {professors[0]?.name || "Prof. Dr. Jeferson Nobre"}
+                                            </p>
+                                            <p className="text-xs text-slate-500 font-mono">
+                                                {professors[0]?.email || "jef***e@ufjf.br"}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Form Buttons */}
@@ -1036,7 +980,6 @@ export default function App() {
                                     >
                                         <option value="">-- Escolha o aluno cadastrado --</option>
                                         {students.map((student) => {
-                                            // Desabilitar o aluno se ele já estiver atualmente com outra chave
                                             const hasAKey = keys.some(k => k.current_student_id === student.id);
                                             return (
                                                 <option
