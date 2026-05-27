@@ -143,3 +143,14 @@ def mask_registration(reg):
     return f"{reg[:3]}***{reg[-2:]}"
 
 # 2. Inicialização do Esquema de Tabelas Profissionais
+def init_db():
+    db_path = os.path.join(os.getcwd(), "database.sqlite")
+    conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    cursor = conn.cursor()
+
+# 5. EXECUÇÃO CENTRALIZADA
+if __name__ == "__main__":
+    init_db()
+    # Porta estrita 3000 exigida pela infraestrutura de proxies do Cloud Run
+    app.run(host="0.0.0.0", port=3000, debug=False)
