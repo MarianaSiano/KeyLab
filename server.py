@@ -79,3 +79,37 @@ def add_security_headers(response):
     return response
 
 # Chave secreta de servidor para encriptação reversível LGPD de dados sensíveis em banco de dados
+LGPD_SECRET_KEY = b"NetLabUFJFLGPDSecurityKey2026!"
+
+def encrypt_field(text):
+    if not text:
+        return ""
+    if text.startswith("enc__"):
+        return text
+    try:
+        text_bytes = text.encode('utf-8')
+        key_bytes = LGPD_SECRET_KEY
+        encrypted_bytes = bytearray()
+        for i, b in enumerate(text_bytes):
+            encrypted_bytes.append(b ^ key_bytes[i % len(key_bytes)])
+        return "enc__" + base64.b64encode(encrypted_bytes).decode('utf-8')
+    except Exception:
+        return text
+
+def decrypt_field(enc_text):
+    if not enc_text:
+        return ""
+    if not enc_text.startswith("enc__"):
+        return enc_text
+    try:
+        raw_b64 = enc_text[5:]
+        encrypted_bytes = base64.b64decode(raw_b64.encode('utf-8'))
+        key_bytes = LGPD_SECRET_KEY
+        decrypted_bytes = bytearray()
+        for i, b in enumerate(encrypted_bytes):
+            decrypted_bytes.append(b ^ key_bytes[i % len(key_bytes)])
+        return decrypted_bytes.decode('utf-8')
+    except Exception:
+        return enc_text
+
+# 1. Conexão Segura e Thread-Safe com o Banco de Dados SQLite Relacional
