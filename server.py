@@ -113,3 +113,33 @@ def decrypt_field(enc_text):
         return enc_text
 
 # 1. Conexão Segura e Thread-Safe com o Banco de Dados SQLite Relacional
+def get_db():
+    db_path = os.path.join(os.getcwd(), "database.sqlite")
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON;")
+    return conn
+
+# 1.1 Auxiliares de Mascaramento LGPD (Server-side Sanitization)
+def mask_email(email):
+    if not email:
+        return ""
+    try:
+        parts = email.split("@")
+        if len(parts) == 2:
+            local, domain = parts
+            if len(local) <= 3:
+                return f"{local[0]}***@{domain}"
+            return f"{local[:3]}***{local[-1]}@{domain}"
+    except Exception:
+        pass
+    return "e***@***.com"
+
+def mask_registration(reg):
+    if not reg:
+        return ""
+    if len(reg) <= 4:
+        return "****"
+    return f"{reg[:3]}***{reg[-2:]}"
+
+# 2. Inicialização do Esquema de Tabelas Profissionais
