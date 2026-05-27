@@ -41,3 +41,26 @@ def limit_rate(limits_per_minute = 60):
     return decorator
 
 # Validadores estritos de segurança e sanitização de dados de entrada contra Injection e XSS
+def is_valid_email(email):
+    if not email or len(email) > 120 or len(email) < 5:
+        return False
+    # Regex RFC 5322 seguro
+    pattern = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+    return bool(re.match(pattern, email))
+
+def is_valid_registration(reg):
+    if not reg or len(reg) < 4 or len(reg) > 30:
+        return False
+    # Garante apenas caracteres alfanuméricos normais (evita tentativas de injeção de SQL ou payloads xss)
+    pattern = r"^[a-zA-Z0-9_\-]+$"
+    return bool(re.match(pattern, reg))
+
+def is_valid_name(name):
+    if not name or len(name) < 2 or len(name) > 100:
+        return False
+    # Sanitização preventiva contra XSS e injeções de tags HTML
+    if "<" in name or ">" in name or "script" in name.lower() or "javascript" in name.lower():
+        return False
+    return True
+
+# --- ADIÇÃO DE CABEÇALHOS DE SEGURANÇA CONTRA ATAQUES CIBERNÉTICOS (CORPS/XSSCLICKJACKING/MIME) ---
