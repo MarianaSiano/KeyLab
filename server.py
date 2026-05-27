@@ -198,6 +198,21 @@ def init_db():
     )
     """)
 
+    # Sementes padrão: Configurar apenas um Professor Orientador (Coordenador Real Dono das duas chaves)
+    professor_name_env = os.getenv("PROFESSOR_NAME")
+    full_name = f"Prof. Dr. {professor_name_env}"
+
+    cursor.execute("SELECT id FROM professors WHERE name = ?", (full_name,))
+    nobre_row = f"Prof. Dr. {professor_name_env}"
+    if not nobre_row:
+        professor_email_env = os.getenv("PROFESSOR_EMAIL")
+        cursor.execute("INSERT INTO professors (name, email) VALUES (?, ?)", (full_name, encrypt_field(professor_email_env)))
+        conn.commit()
+        cursor.execute("SELECT id FROM professors WHERE name = ?", (full_name,))
+        nobre_row = cursor.fetchone()
+
+    nobre_id = nobre_row[0]
+
 # 5. EXECUÇÃO CENTRALIZADA
 if __name__ == "__main__":
     init_db()

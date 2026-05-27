@@ -197,9 +197,9 @@ Edite o arquivo `package.json` criado na raiz para adicionar os comandos que com
 
 Configure sua seção `"scripts"` como a seguir:
 
-- **`"dev"`**: `"vite build && python3 server.py"` (Compila o frontend unificado e inicializa a API Flask).
+- **`"dev"`**: `"vite build && python server.py"` (Compila o frontend unificado e inicializa a API Flask para Windows).
 
-- **`"start"`**: `"python3 server.py"` (Inicia o servidor de produção servindo os assets estáticos)
+- **`"start"`**: `"python server.py"` (Inicia o servidor de produção servindo os assets estáticos para Windows)
 
 ### Passo 4: Estrutura do Backend em Python (`server.py`)
 
