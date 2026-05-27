@@ -64,3 +64,18 @@ def is_valid_name(name):
     return True
 
 # --- ADIÇÃO DE CABEÇALHOS DE SEGURANÇA CONTRA ATAQUES CIBERNÉTICOS (CORPS/XSSCLICKJACKING/MIME) ---
+@app.after_request
+def add_security_headers(response):
+    # Protege contra MIME sniffing (força o navegador a seguir o tipo de conteúdo estritamente declarado)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # Ativa filtros de XSS nativos nos navegadores web modernos
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    # Previne vazamento inadvertido de dados de referenciador
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # Desativa cache local para respostas de API que trafegam dados sensíveis da LGPD
+    if request.path.startswith("/api/"):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+    return response
+
+# Chave secreta de servidor para encriptação reversível LGPD de dados sensíveis em banco de dados
