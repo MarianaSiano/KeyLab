@@ -213,6 +213,47 @@ def init_db():
 
     nobre_id = nobre_row[0]
 
+    # Auto-migração silenciosa e segura de emails de professores legíveis em texto plano no banco de dados SQLite
+    cursor.execute("SELECT id, email FROM professors")
+    for row in cursor.fetchall():
+        p_id, email = row[0], row[1]
+        if email and not email.startswith("enc__"):
+            cursor.execute("UPDATE professors SET email = ? WHERE id = ?", (encrypt_field(email), p_id))
+
+    # Associar e atualizar todos os alunos cadastrados existentes para apontar para o orientador/coordenador único
+    cursor.execute("UPDATE students SET professor_id = ?", (nobre_id,))
+
+    # Excluir outros orientadores para manter a integridade de "Orientador Único das Chaves"
+    cursor.execute("DELETE FROM professors WHERE id != ?", (nobre_id,))
+
+    # Auto-migração silenciosa e segura de alunos legíveis (e-mails e matrículas) para encriptação reversível LGPD
+    cursor.execute("SELECT id, email, registration_number FROM students")
+    for row in cursor.fetchall():
+        s_id, email, reg = row[0], row[1], row[2]
+        needs_update = False
+        new_email = email
+        new_reg = reg
+        if email and not email.startswith("enc__"):
+            new_email = encrypt_field(email)
+            needs_update = True
+        if reg and not reg.startswith("enc__"):
+            new_reg = encrypt_field(reg)
+            needs_update = True
+        if needs_update:
+            cursor.execute("UPDATE students SET email = ?, registration_number = ? WHERE id = ?", (new_email, new_reg, s_id))
+
+    # Sementes padrão para as duas haves do NetLab se vazio
+    cursor.execute("SELECT COUNT(*) FROM keys")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO keys (id, name, status) VALUES (1, 'Chave Principal (Lab NetLab - Sala 3215)', 'disponivel')")
+        cursor.execute("INSERT INTO keys (id, name, status) VALUES (2, 'Chave Reserva (Lab NetLab - Sala 3215)', 'disponivel')")
+        
+    conn.commit()
+    conn.close()
+    print("Banco de dados SQLite inicializado perfeitamente com integridade referencial, orientador único e criptografia ativa LGPD.")
+
+# 3. ENDPOINTS DA API REST
+
 # 5. EXECUÇÃO CENTRALIZADA
 if __name__ == "__main__":
     init_db()
