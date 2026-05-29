@@ -254,6 +254,32 @@ def init_db():
 
 # 3. ENDPOINTS DA API REST
 
+# --- PROFESSORES ---
+@app.route("/api/professors", methods=["GET"])
+@limit_rate(60)
+def get_professors():
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM professors ORDER BY name ASC")
+        rows = cursor.fetchall()
+        professors = []
+        for row in rows:
+            p = dict(row)
+            p["email"] = mask_email(decrypt_field(p["email"]))
+            professors.append(p)
+        conn.close()
+        return jsonify(professors)
+    except Exception as e:
+        return jsonify({"error": f"Erro ao buscar professores: {str(e)}"}), 500
+
+@app.route("/api/professors",  methods=["POST"])
+@limit_rate(10)
+def add_professor():
+    return jsonify({"error": "Sob diretriz de orientador/dono único das chaves, novos professores não podem ser adicionados."}), 400
+
+# --- ALUNOS (CADASTRO / ATUALIZAÇÃO / EXCLUSÃO) ---
+
 # 5. EXECUÇÃO CENTRALIZADA
 if __name__ == "__main__":
     init_db()
